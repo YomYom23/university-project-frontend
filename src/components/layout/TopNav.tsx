@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Sparkles, ChevronLeft, type LucideIcon } from 'lucide-react';
+import { Search, type LucideIcon } from 'lucide-react';
 import Avatar from '../ui/Avatar';
 import type { NavItem } from '../../types';
 
@@ -12,72 +12,61 @@ interface Props {
   current: string;
   onNav: (k: string) => void;
   onBack?: () => void;
-  footer?: ReactNode;
+  badge?: ReactNode;
+  title?: string;
+  hint?: string;
 }
 
-export default function Sidebar({ name, subtitle, gradient, iconMap, nav, current, onNav, onBack, footer }: Props) {
+export default function TopNav({
+                                 name, subtitle, gradient, iconMap, nav, current, onNav, onBack, badge, title, hint,
+                               }: Props) {
   return (
-      <>
-        <aside className="sidebar">
-          <div className="sidebar-brand">
+      <header className="topbar">
+        <div className="topbar-row">
+          <button className="topbar-brand" onClick={onBack}>
             <div style={{
-              width: 30, height: 30, borderRadius: 9,
-              background: 'var(--cta-grad)', display: 'grid', placeItems: 'center',
-            }}>
-              <Sparkles size={14} />
-            </div>
-            <div style={{ fontWeight: 700 }}>UniMatch</div>
-          </div>
-          <div className="sidebar-user">
-            <Avatar name={name} size={42} gradient={gradient} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {name}
-              </div>
-              <div className="mute text-xs" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {subtitle}
-              </div>
-            </div>
-          </div>
-          <div className="sidebar-nav">
-            {nav.map((item) => {
-              const Ico = iconMap[item.icon];
-              return (
-                  <button key={item.key}
-                          className={`nav-item ${current === item.key ? 'nav-item-active' : ''}`}
-                          onClick={() => onNav(item.key)}>
-                    {Ico && <Ico size={16} />}
-                    <span>{item.label}</span>
-                    {item.badge ? (
-                        <span style={{
-                          marginLeft: 'auto', fontSize: 11, padding: '2px 7px', borderRadius: 8,
-                          background: 'rgba(59,130,246,0.2)', color: '#bfdbfe',
-                        }}>{item.badge}</span>
-                    ) : null}
-                  </button>
-              );
-            })}
-          </div>
-          {footer ?? (onBack && (
-              <button className="nav-item" onClick={onBack}>
-                <ChevronLeft size={16} /> Back to landing
-              </button>
-          ))}
-        </aside>
+              width: 22, height: 22, borderRadius: 6,
+              background: 'var(--text)', color: 'var(--bg)',
+              display: 'grid', placeItems: 'center',
+              fontWeight: 700, fontSize: 12, letterSpacing: '-0.02em',
+            }}>U</div>
+            <div style={{ fontWeight: 500, fontSize: 14, letterSpacing: '-0.01em' }}>UniMatch</div>
+          </button>
 
-        <nav className="mobile-nav">
-          {nav.slice(0, 5).map((item) => {
+          <div className="topbar-actions">
+            {badge}
+            <button className="icon-btn" aria-label="Search"><Search size={15} /></button>
+            <div className="topbar-user">
+              <Avatar name={name} size={30} gradient={gradient} />
+              <div>
+                <div className="topbar-user-name">{name}</div>
+                <div className="topbar-user-sub">{subtitle}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {(title || hint) && (
+            <div className="topbar-title">
+              {title && <h1>{title}</h1>}
+              {hint && <p>{hint}</p>}
+            </div>
+        )}
+
+        <nav className="topnav">
+          {nav.map((item) => {
             const Ico = iconMap[item.icon];
             return (
                 <button key={item.key}
                         className={`nav-item ${current === item.key ? 'nav-item-active' : ''}`}
                         onClick={() => onNav(item.key)}>
-                  {Ico && <Ico size={18} />}
-                  <span>{item.label.split(' ')[0]}</span>
+                  {Ico && <Ico size={14} />}
+                  <span>{item.label}</span>
+                  {item.badge ? <span className="topnav-badge">{item.badge}</span> : null}
                 </button>
             );
           })}
         </nav>
-      </>
+      </header>
   );
 }

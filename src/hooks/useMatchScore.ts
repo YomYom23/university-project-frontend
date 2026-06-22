@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import type { Student, University, MatchResult } from '../types';
+import type {Student, University, MatchResult} from '../types';
+
 
 export function computeMatch(student: Student, uni: University): MatchResult {
   // GPA — 25 pts
-  let academics = 0;
+  let academics;
   if (student.gpa >= uni.minGpaRequired) {
     const delta = Math.abs(student.gpa - uni.avgGpa);
     academics = Math.max(0, 25 - delta * 40);
@@ -13,7 +14,7 @@ export function computeMatch(student: Student, uni: University): MatchResult {
 
   // Budget — 25 pts
   const [lo, hi] = student.budgetRange;
-  let budget = 0;
+  let budget;
   if (uni.tuition <= hi && uni.tuition >= lo) budget = 25;
   else if (uni.tuition < lo) budget = 22;
   else {
@@ -32,22 +33,22 @@ export function computeMatch(student: Student, uni: University): MatchResult {
 
   // Location — 15 pts
   const location = student.preferredLocations.includes(uni.location)
-    ? 15
-    : student.preferredLocations.some(
-        (loc) => loc.split(',')[1]?.trim() === uni.location.split(',')[1]?.trim(),
+      ? 15
+      : student.preferredLocations.some(
+          (loc) => loc.split(',')[1]?.trim() === uni.location.split(',')[1]?.trim(),
       )
-    ? 8
-    : 0;
+          ? 8
+          : 0;
 
   const score = Math.round(academics + budget + major + vibe + location);
   return {
     score: Math.min(100, Math.max(0, score)),
     breakdown: {
-      academics: Math.round((academics / 25) * 100),
-      budget: Math.round((budget / 25) * 100),
-      major: Math.round((major / 20) * 100),
-      vibe: Math.round((vibe / 15) * 100),
-      location: Math.round((location / 15) * 100),
+      "academics": Math.round((academics / 25) * 100),
+      "budget": Math.round((budget / 25) * 100),
+      "major": Math.round((major / 20) * 100),
+     "vibe": Math.round((vibe / 15) * 100),
+      "location": Math.round((location / 15) * 100),
     },
   };
 }
@@ -59,7 +60,7 @@ export function useMatchScore(student: Student, uni: University): MatchResult {
 export interface MatchReason { label: string; tone: 'blue' | 'green' | 'amber' | 'red' }
 
 export function topMatchReasons(
-  student: Student, uni: University, breakdown: MatchResult['breakdown'],
+    student: Student, uni: University, breakdown: MatchResult['breakdown'],
 ): MatchReason[] {
   const reasons: MatchReason[] = [];
   if (breakdown.major >= 90) reasons.push({ label: `${student.major} program`, tone: 'blue' });
@@ -74,7 +75,7 @@ export function topMatchReasons(
 }
 
 export function topMatchReasonsForStudent(
-  student: Student, uni: University, breakdown: MatchResult['breakdown'],
+    student: Student, uni: University, breakdown: MatchResult['breakdown'],
 ): MatchReason[] {
   const reasons: MatchReason[] = [];
   if (breakdown.academics >= 80) reasons.push({ label: 'Strong academic fit', tone: 'green' });

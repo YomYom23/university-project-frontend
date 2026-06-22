@@ -7,11 +7,12 @@ interface InputProps {
 }
 
 export function Input({ label, value, onChange, type = 'text', placeholder }: InputProps) {
+  const isEmpty = value === '' || value === undefined || value === null;
   return (
     <div className="field">
       {label && <label>{label}</label>}
       <input
-        className="input"
+        className={`input${isEmpty ? ' input-empty' : ''}`}
         type={type}
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
