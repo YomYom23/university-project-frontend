@@ -78,4 +78,5 @@ export interface AuthContextType {
     user: Student | University | null;
     isLoading: boolean;
     setUser: React.Dispatch<React.SetStateAction<Student | University | null>>;
+    refreshUser: () => Promise<void>;
 }

@@ -1,9 +1,10 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Check, Eye, EyeOff, Lock, Mail} from 'lucide-react';
+import { ArrowRight, Check, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Segmented from '../components/ui/Segmented';
+import { useAuth } from '../hooks/useAuth';
 
 type Role = 'student' | 'university';
 
@@ -37,7 +38,7 @@ function Field({ label, icon, error, children }: { label: string; icon: ReactNod
     );
 }
 
-const inputStyle: React.CSSProperties = { width: '100%', paddingLeft: 38 };
+const inputStyle: CSSProperties = { width: '100%', paddingLeft: 38 };
 
 function SocialButton({ mark, children, onClick }: { mark: string; children: ReactNode; onClick: () => void }) {
     return (
@@ -52,6 +53,7 @@ function SocialButton({ mark, children, onClick }: { mark: string; children: Rea
 }
 
 function BrandPanel() {
+    const navigate = useNavigate();
     const ticks = [
         'One profile, matched both ways',
         'See your fit score instantly',
@@ -67,7 +69,8 @@ function BrandPanel() {
                 position: 'absolute', inset: 0, pointerEvents: 'none',
                 background: 'radial-gradient(620px 320px at 110% -10%, rgba(59,91,219,0.30), transparent 60%), radial-gradient(520px 360px at -20% 120%, rgba(255,255,255,0.06), transparent 60%)',
             }} />
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div onClick={() => navigate("/")}
+                style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, cursor: "pointer" }}>
                 <div style={{
                     width: 24, height: 24, borderRadius: 7, background: 'var(--bg)', color: 'var(--text)',
                     display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 700, letterSpacing: '-0.02em',
@@ -92,7 +95,7 @@ function BrandPanel() {
             </div>
 
             <div style={{ position: 'relative', marginTop: 40, paddingTop: 24, borderTop: '1px solid rgba(246,244,238,0.14)' }}>
-                <p style={{ fontSize: 14, lineHeight: 1.6, margin: 0, color: 'rgba(246,244,238,0.9)', textWrap: 'pretty' as React.CSSProperties['textWrap'] }}>
+                <p style={{ fontSize: 14, lineHeight: 1.6, margin: 0, color: 'rgba(246,244,238,0.9)', textWrap: 'pretty' as CSSProperties['textWrap'] }}>
                     “I went from a list of 40 schools to three real conversations in a weekend.”
                 </p>
                 <div style={{ fontSize: 12, color: 'rgba(246,244,238,0.55)', marginTop: 10 }}>Maya R. · Class of 2026</div>
@@ -103,6 +106,7 @@ function BrandPanel() {
 
 export default function SignupPage() {
     const navigate = useNavigate();
+    const { refreshUser } = useAuth();
     const [role, setRole] = useState<Role>('student');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -124,23 +128,28 @@ export default function SignupPage() {
         if (!canSubmit) return;
         try {
             localStorage.setItem('um.signup', JSON.stringify({ role, email }));
-            const url = "http://localhost:3000/auth/registration"
+            const url = "http://localhost:3000/auth/registration";
             const res = await fetch(url, {
                 method: "POST",
-                headers: {
-                   "Content-Type": "application/json"
-                },
+                credentials: "include", // so the session cookie set on register is stored
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    role: `${role}`.toUpperCase(),
+                    role: role.toUpperCase(),
                     email,
                     password,
-                })
+                }),
             });
-            if (!res.ok) throw new Error('Failed to register student');
-            const result = await res.json();
-            console.log(result);
-        } catch { /* ignore */ }
-        navigate(`/onboarding/${role}`);
+            if (!res.ok) throw new Error('Failed to register');
+            await res.json().catch(() => ({}));
+
+            // Registration establishes the session → load it into context so the
+            // (now protected) onboarding route lets the new user through.
+            localStorage.setItem('um.')
+            await refreshUser();
+            navigate(`/onboarding/${role}`);
+        } catch {
+            // Surface an error to the user here if you want; navigation is skipped.
+        }
     };
 
     const strengthColor = useMemo(() => ['var(--danger)', 'var(--danger)', 'var(--warning)', 'var(--success)', 'var(--success)'][score], [score]);

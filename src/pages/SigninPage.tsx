@@ -1,10 +1,9 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type ReactNode, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Check, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import Button from '../components/ui/Button';
-
-type Role = 'STUDENT' | 'UNIVERSITY';
+import { useAuth } from '../hooks/useAuth';
 
 function Field({ label, icon, error, action, children }: { label: string; icon: ReactNode; error?: string; action?: ReactNode; children: ReactNode }) {
     return (
@@ -22,19 +21,7 @@ function Field({ label, icon, error, action, children }: { label: string; icon: 
     );
 }
 
-const inputStyle: React.CSSProperties = { width: '100%', paddingLeft: 38 };
-
-// function SocialButton({ mark, children, onClick }: { mark: string; children: ReactNode; onClick: () => void }) {
-//     return (
-//         <button type="button" className="btn btn-ghost btn-block" onClick={onClick} style={{ justifyContent: 'center', gap: 10 }}>
-//       <span style={{
-//           width: 18, height: 18, borderRadius: 5, display: 'grid', placeItems: 'center',
-//           background: 'var(--text)', color: 'var(--bg)', fontSize: 11, fontWeight: 700, letterSpacing: '-0.02em',
-//       }}>{mark}</span>
-//             {children}
-//         </button>
-//     );
-// }
+const inputStyle: CSSProperties = { width: '100%', paddingLeft: 38 };
 
 function BrandPanel() {
     const navigate = useNavigate();
@@ -47,9 +34,10 @@ function BrandPanel() {
                 position: 'absolute', inset: 0, pointerEvents: 'none',
                 background: 'radial-gradient(620px 320px at 110% -10%, rgba(59,91,219,0.30), transparent 60%), radial-gradient(520px 360px at -20% 120%, rgba(255,255,255,0.06), transparent 60%)',
             }} />
-            <div onClick={() => navigate("/")} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div onClick={() => navigate("/")}
+                style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, cursor: "pointer" }}>
                 <div style={{
-                    width: 24, height: 24, borderRadius: 7, background: 'var(--bg)', color: 'var(--text)', cursor: "pointer",
+                    width: 24, height: 24, borderRadius: 7, background: 'var(--bg)', color: 'var(--text)',
                     display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 700, letterSpacing: '-0.02em',
                 }}>U</div>
                 <div style={{ fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em' }}>UniMatch</div>
@@ -76,9 +64,9 @@ function BrandPanel() {
     );
 }
 
-export default function LoginPage() {
+export default function SigninPage() {
     const navigate = useNavigate();
-    const [role, setRole] = useState<Role>('STUDENT');
+    const { refreshUser } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPw, setShowPw] = useState(false);
@@ -96,30 +84,36 @@ export default function LoginPage() {
         if (!canSubmit) return;
 
         try {
-            localStorage.setItem('um.login', JSON.stringify({ email, remember }));
-            const authUrl = "http://localhost:3000/auth"
+            const authUrl = "http://localhost:3000/auth";
             const res = await fetch(`${authUrl}/login`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                credentials: "include", // send/receive the session cookie
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
             });
 
             if (!res.ok) {
-                const errorData = await res.json();
+                const errorData = await res.json().catch(() => ({}));
                 setError(errorData.message || "Invalid email or password");
-                return
+                return;
             }
 
             const data = await res.json();
-            console.log(data);
             if (data.error) throw new Error(data.error);
-            localStorage.setItem('um.token', data.token);
-            setRole(data.userRole as Role);
+            if (data.token) localStorage.setItem('um.token', data.token);
+            if (remember) localStorage.setItem('um.login', JSON.stringify({ email }));
 
-        } catch {/* ignore */}
-        navigate(role === 'STUDENT' ? '/student/dashboard' : '/university/dashboard');
+            // Pull the freshly-established session into the auth context so
+            // ProtectedRoute sees a user instead of bouncing back to /login.
+            await refreshUser();
+
+            // Navigate from the RESPONSE role (not stale state) and normalise
+            // casing so it matches the lowercase route paths.
+            const nextRole = String(data.user.role ?? '').toLowerCase();
+            navigate(nextRole === 'university' ? '/university/dashboard' : '/student/dashboard');
+        } catch {
+            setError('Something went wrong. Please try again.');
+        }
     };
 
     return (
@@ -146,11 +140,6 @@ export default function LoginPage() {
                         <div>
                             <h2 className="h2">Sign in</h2>
                             <p className="mute" style={{ marginTop: 6 }}>Welcome back — let's get you to your matches.</p>
-                        </div>
-
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                            {/*<SocialButton mark="G" onClick={}>Continue with Google</SocialButton>*/}
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text-3)' }}>
@@ -191,14 +180,14 @@ export default function LoginPage() {
                           </span>
                             <span className="text-sm" style={{ color: 'var(--text-2)' }}>Keep me signed in</span>
                         </button>
-                        
+
                         <div>
-                        {error && (
-                            <span style={{
-                                fontSize: 12, color: 'var(--danger)', display: 'grid', placeItems: 'center'
-                            }}>{error}
+                            {error && (
+                                <span style={{
+                                    fontSize: 12, color: 'var(--danger)', display: 'grid', placeItems: 'center'
+                                }}>{error}
                             </span>
-                        )}
+                            )}
                         </div>
 
                         <Button size="lg" block onClick={submit} iconRight={<ArrowRight size={16} />} disabled={touched && !canSubmit}>
