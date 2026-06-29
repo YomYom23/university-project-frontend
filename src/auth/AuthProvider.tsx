@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ReactNode } from "react";
 import { AuthContext } from "./AuthContext.ts";
-import type { Student, University } from "../types.ts";
+import type { User } from "../types.ts";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<Student | University | null>(null);
+    const [user, setUser] = useState< User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     // Single source of truth for "who is logged in". Hits the cookie-backed
@@ -14,8 +14,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const refreshUser = useCallback(async () => {
         try {
             const res = await fetch('http://localhost:3000/auth/status', {
-                credentials: 'include',
-                headers: { 'Authorization' : `Bearer ${localStorage.getItem('token') ?? ""}` }
+                credentials: 'include'
             });
 
             if (res.ok) {

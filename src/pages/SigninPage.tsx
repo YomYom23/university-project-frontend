@@ -77,7 +77,6 @@ export default function SigninPage() {
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const pwValid = password.length >= 1;
     const canSubmit = emailValid && pwValid;
-
     const submit = async () => {
         setError('');
         setTouched(true);
@@ -106,10 +105,15 @@ export default function SigninPage() {
             // Pull the freshly-established session into the auth context so
             // ProtectedRoute sees a user instead of bouncing back to /login.
             await refreshUser();
+            const { user } = useAuth();
+            if(user?.userOnboarding){
+                navigate('/onboarding');
+            }
 
             // Navigate from the RESPONSE role (not stale state) and normalise
             // casing so it matches the lowercase route paths.
-            const nextRole = String(data.user.role ?? '').toLowerCase();
+            const nextRole = String(user?.role ?? '').toLowerCase();
+            if (user)
             navigate(nextRole === 'university' ? '/university/dashboard' : '/student/dashboard');
         } catch {
             setError('Something went wrong. Please try again.');

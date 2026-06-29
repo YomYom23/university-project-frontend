@@ -6,6 +6,12 @@ export type Vibe =
 
 export type Size = 'Small' | 'Medium' | 'Large';
 
+export interface User {
+    id: string;
+    role: 'student' | 'university';
+    userOnboarding: number | null;
+}
+
 export interface Student {
     id: string;
     firstName: string;
@@ -75,8 +81,8 @@ export interface NavItem {
 }
 
 export interface AuthContextType {
-    user: Student | University | null;
+    user: User | null;
     isLoading: boolean;
-    setUser: React.Dispatch<React.SetStateAction<Student | University | null>>;
+    setUser: React.Dispatch<React.SetStateAction<User | null>>;
     refreshUser: () => Promise<void>;
 }

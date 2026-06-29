@@ -1,5 +1,6 @@
 import {useState, type ReactNode} from 'react';
 import {useNavigate} from 'react-router-dom';
+import { useAuth } from "../hooks/useAuth.tsx";
 import {motion, AnimatePresence} from 'framer-motion';
 import {ChevronLeft, ChevronRight, ArrowRight, Upload} from 'lucide-react';
 import Button from '../components/ui/Button';
@@ -96,9 +97,6 @@ interface Props {
 }
 
 export default function OnboardingPage({role}: Props) {
-    /**
-     *
-     */
     const isStudent = role === 'student';
     const navigate = useNavigate();
     const steps = isStudent ? STUDENT_STEPS : UNI_STEPS;
@@ -110,6 +108,8 @@ export default function OnboardingPage({role}: Props) {
     const uniSet = (payload: Partial<UniForm>) => setUniData((data) => ({...data, ...payload}));
 
     const next = async () => {
+        const { user } = useAuth();
+
         if (step === steps.length - 1) {
             try {
                 if (isStudent) {
@@ -131,7 +131,13 @@ export default function OnboardingPage({role}: Props) {
             } catch { /* ignore */
             }
             navigate(isStudent ? '/student/dashboard' : '/university/dashboard');
-        } else setStep((currentstep) => currentstep + 1);
+        } else {
+            if (user) {
+                setStep((currentstep) => currentstep + 1);
+                const url = `http://localhost:3000/user/${user.id}/userOnboarding/`
+                const res = await fetch('http://localhost:3000/user/')
+            }
+        }
     };
     const back = () => (step > 0 ? setStep((s) => s - 1) : navigate('/'));
 

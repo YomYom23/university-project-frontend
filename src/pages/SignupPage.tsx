@@ -144,7 +144,6 @@ export default function SignupPage() {
 
             // Registration establishes the session → load it into context so the
             // (now protected) onboarding route lets the new user through.
-            localStorage.setItem('um.')
             await refreshUser();
             navigate(`/onboarding/${role}`);
         } catch {
