@@ -9,7 +9,8 @@ export type Size = 'Small' | 'Medium' | 'Large';
 export interface User {
     id: string;
     role: 'student' | 'university';
-    userOnboarding: number | null;
+    isOnboarding: boolean;
+    onboardingStep: number;
 }
 
 export interface Student {

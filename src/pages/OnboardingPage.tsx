@@ -1,7 +1,7 @@
 import {useState, type ReactNode} from 'react';
 import {useNavigate} from 'react-router-dom';
 import { useAuth } from "../hooks/useAuth.tsx";
-import {motion, AnimatePresence} from 'framer-motion';
+import {motion, AnimatePresence, number} from 'framer-motion';
 import {ChevronLeft, ChevronRight, ArrowRight, Upload} from 'lucide-react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
@@ -97,18 +97,19 @@ interface Props {
 }
 
 export default function OnboardingPage({role}: Props) {
+    const { user } = useAuth();
     const isStudent = role === 'student';
     const navigate = useNavigate();
     const steps = isStudent ? STUDENT_STEPS : UNI_STEPS;
-    const [step, setStep] = useState(0);
+    const [step, setStep] = useState(user?.onboardingStep || 0);
     const [studentData, setStudentData] = useState<StudentForm>(defaultStudent());
+
     const [uniData, setUniData] = useState<UniForm>(defaultUni());
 
     const studentSet = (payload: Partial<StudentForm>) => setStudentData((data) => ({...data, ...payload}));
     const uniSet = (payload: Partial<UniForm>) => setUniData((data) => ({...data, ...payload}));
 
     const next = async () => {
-        const { user } = useAuth();
 
         if (step === steps.length - 1) {
             try {
@@ -133,9 +134,21 @@ export default function OnboardingPage({role}: Props) {
             navigate(isStudent ? '/student/dashboard' : '/university/dashboard');
         } else {
             if (user) {
-                setStep((currentstep) => currentstep + 1);
-                const url = `http://localhost:3000/user/${user.id}/userOnboarding/`
-                const res = await fetch('http://localhost:3000/user/')
+                setStep((currStep) => currStep + 1);
+                const res = await fetch(`http://localhost:3000/user/${user.id}`, {
+                    method: "PUT",
+                    credentials: 'include',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        onboardingStep: step,
+                    }),
+                });
+
+                if (!res.ok) throw new Error('Failed to update user step');
+                const result = await res.json();
+                console.log(result);
             }
         }
     };

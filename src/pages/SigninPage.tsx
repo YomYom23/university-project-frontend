@@ -67,6 +67,7 @@ function BrandPanel() {
 export default function SigninPage() {
     const navigate = useNavigate();
     const { refreshUser } = useAuth();
+    const { user } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPw, setShowPw] = useState(false);
@@ -105,16 +106,15 @@ export default function SigninPage() {
             // Pull the freshly-established session into the auth context so
             // ProtectedRoute sees a user instead of bouncing back to /login.
             await refreshUser();
-            const { user } = useAuth();
-            if(user?.userOnboarding){
-                navigate('/onboarding');
-            }
+            if(user?.isOnboarding){
+                navigate(`/onboarding/${String(user.role).toLowerCase()}`);
+            } else {
 
             // Navigate from the RESPONSE role (not stale state) and normalise
             // casing so it matches the lowercase route paths.
-            const nextRole = String(user?.role ?? '').toLowerCase();
-            if (user)
-            navigate(nextRole === 'university' ? '/university/dashboard' : '/student/dashboard');
+                const nextRole = String(user?.role ?? '').toLowerCase();
+                navigate(nextRole === 'university' ? '/university/dashboard' : '/student/dashboard');
+            }
         } catch {
             setError('Something went wrong. Please try again.');
         }
