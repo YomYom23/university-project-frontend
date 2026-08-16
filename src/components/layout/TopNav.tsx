@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { Search, type LucideIcon } from 'lucide-react';
 import Avatar from '../ui/Avatar';
 import type { NavItem } from '../../types';
+import {useNavigate} from "react-router-dom";
+import Button from "../ui/Button.tsx";
 
 interface Props {
   name: string;
@@ -20,6 +22,9 @@ interface Props {
 export default function TopNav({
                                  name, subtitle, gradient, iconMap, nav, current, onNav, onBack, badge, title, hint,
                                }: Props) {
+  const navigate = useNavigate();
+
+  const onboarding = () => navigate("/onboarding/student")
   return (
       <header className="topbar">
         <div className="topbar-row">
@@ -32,6 +37,10 @@ export default function TopNav({
             }}>U</div>
             <div style={{ fontWeight: 500, fontSize: 14, letterSpacing: '-0.01em' }}>UniMatch</div>
           </button>
+
+          <Button onClick={onboarding}>
+            back
+          </Button>
 
           <div className="topbar-actions">
             {badge}

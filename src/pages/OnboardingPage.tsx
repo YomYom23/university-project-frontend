@@ -1,7 +1,7 @@
 import {useState, type ReactNode} from 'react';
 import {useNavigate} from 'react-router-dom';
 import { useAuth } from "../hooks/useAuth.tsx";
-import {motion, AnimatePresence, number} from 'framer-motion';
+import {motion, AnimatePresence} from 'framer-motion';
 import {ChevronLeft, ChevronRight, ArrowRight, Upload} from 'lucide-react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
@@ -13,28 +13,49 @@ import Toggle from '../components/ui/Toggle';
 import {RangeSlider, DualRangeSlider} from '../components/ui/RangeSlider';
 import MultiChipSelect from '../components/ui/MultiChipSelect';
 import StepProgress from '../components/ui/StepProgress';
-import {VIBE_TAGS, MAJORS, ACTIVITIES, LOCATIONS, COUNTRIES} from '../data/options';
+import {VIBE_TAGS, MAJORS, ACTIVITIES, LOCATIONS, COUNTRIES, SETTINGS, SUPPORT_NEEDS} from '../data/options';
 import type {Student, University} from '../types';
 
 type StudentForm = Partial<Student> & {
     preferredMajors: string[]; preferredLocations: string[]; campusVibes: string[];
     extracurriculars: string[]; budgetRange: [number, number]; gpa: number;
+    // Fields below are informed by the college-fit data taxonomy (A2, A3, B6, B7, B10):
+    // GPA/test values are only comparable with context, so we capture that context
+    // instead of a bare number, and cost/support signals are collected early (cost-first).
+    gpaScale: 'Weighted' | 'Unweighted';
+    submittingScores: boolean;
+    settingPreference: string[];
+    distanceTolerance: number;
+    needsFinancialAid: boolean;
+    supportNeeds: string[];
+    riskTolerance: 'Mostly safety' | 'Balanced list' | 'Reach-heavy';
 };
 type UniForm = Partial<University> & {
     programs: string[]; campusVibes: string[]; preferredMajors: string[]; preferredActivities: string[];
+    // Fields below reflect the taxonomy's highest-value, most-requested college-side signals
+    // (A3 test policy, B2 need-met %, B5 Pell % as a socioeconomic-diversity proxy, A10 demonstrated interest).
+    testPolicy: 'Required' | 'Test-optional' | 'Test-free';
+    needMetPercent: number;
+    pellPercent: number;
+    tracksDemonstratedInterest: boolean;
+    firstGenSupport: boolean;
 };
 
 const defaultStudent = (): StudentForm => ({
-    firstName: '', lastName: '', age: '', country: 'USA', email: '',
+    firstName: '', lastName: '', age: '', country: '', email: '',
     gpa: 3.7, sat: '', highSchool: '', graduationYear: 2026, classRank: '',
     preferredMajors: [], preferredLocations: [], size: 'Medium', budgetRange: [20000, 50000], campusVibes: [],
     extracurriculars: [], careerGoal: '', priority: '',
+    gpaScale: 'Unweighted', submittingScores: true, settingPreference: [], distanceTolerance: 500,
+    needsFinancialAid: true, supportNeeds: [], riskTolerance: 'Balanced list',
 });
 const defaultUni = (): UniForm => ({
     name: '', location: '', website: '', founded: '', tagline: '',
     acceptanceRate: 25, avgGpa: 3.6, programs: [], size: 'Medium',
     tuition: 40000, campusVibes: [], scholarships: true, scholarshipDetails: '',
     minGpaRequired: 3.4, preferredMajors: [], preferredActivities: [], specialPrograms: '',
+    testPolicy: 'Test-optional', needMetPercent: 70, pellPercent: 20,
+    tracksDemonstratedInterest: false, firstGenSupport: true,
 });
 
 function StepShell({title, hint, children, k}: { title: string; hint?: string; children: ReactNode; k: string }) {
@@ -114,13 +135,17 @@ export default function OnboardingPage({role}: Props) {
         if (step === steps.length - 1) {
             try {
                 if (isStudent) {
-                    const url = "http://localhost:3000/auth/registration"
+                    const url = "http://localhost:3000/users/"
                     const response = await fetch(url, {
-                        method: "POST",
+                        method: "PATCH",
+                        credentials: "include",
                         headers: {
                             "Content-Type": "application/json",
                         },
-                        body: JSON.stringify(studentData),
+                        body: JSON.stringify({
+                            userData: studentData,
+                            onboardingStep: step + 1,
+                        }),
                     });
 
                     if (!response.ok) throw new Error('Failed to register student');
@@ -129,30 +154,53 @@ export default function OnboardingPage({role}: Props) {
 
                     localStorage.setItem('um.student', JSON.stringify(studentData))
                 } else localStorage.setItem('um.university', JSON.stringify(uniData));
-            } catch { /* ignore */
+            } catch (e) {
+                console.log("An error has occured: ", e)
             }
             navigate(isStudent ? '/student/dashboard' : '/university/dashboard');
         } else {
-            if (user) {
-                setStep((currStep) => currStep + 1);
-                const res = await fetch(`http://localhost:3000/user/${user.id}`, {
-                    method: "PUT",
+            try {
+                const res = await fetch(`http://localhost:3000/users/`, {
+                    method: "PATCH",
                     credentials: 'include',
                     headers: {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        onboardingStep: step,
+                        onboardingStep: step + 1,
                     }),
                 });
-
+                setStep((currStep) => currStep + 1);
                 if (!res.ok) throw new Error('Failed to update user step');
                 const result = await res.json();
                 console.log(result);
+            } catch (e) {
+                console.log("Error: ", e)
             }
+
+            console.log(studentData)
         }
     };
-    const back = () => (step > 0 ? setStep((s) => s - 1) : navigate('/'));
+    const back = async () => {
+        if(step > 0 ){
+            const res = await fetch(`http://localhost:3000/users/`, {
+                method: "PATCH",
+                credentials: 'include',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    onboardingStep: step - 1,
+                }),
+            });
+            setStep((currStep) => currStep - 1)
+            if (!res.ok) {
+                throw new Error('Failed to update user step');
+            }
+            const result = await res.json();
+            console.log(result);
+        } else { navigate('/') }
+    };
 
     const renderStudent = () => {
         const data = studentData;
@@ -174,14 +222,28 @@ export default function OnboardingPage({role}: Props) {
         );
         if (step === 1) return (
             <StepShell k="s1" title="Academics" hint="What you've earned. We'll match it to schools that fit.">
-                <RangeSlider label="GPA (weighted or unweighted)" min={0} max={4} step={0.01}
+                <div className="field"><label>GPA scale</label>
+                    <Segmented options={['Weighted', 'Unweighted']} value={data.gpaScale}
+                               onChange={(value) => studentSet({gpaScale: value as 'Weighted' | 'Unweighted'})}/>
+                    <span className="mute text-xs" style={{marginTop: 4}}>Schools recalculate GPA differently — telling us the scale keeps your matches honest.</span>
+                </div>
+                <RangeSlider label="GPA" min={0} max={4} step={0.01}
                              value={data.gpa} onChange={(value) => studentSet({gpa: value})}
                              format={(value) => value.toFixed(2)}/>
+                <div className="field"><label>Standardized testing</label>
+                    <Segmented options={['Submitting scores', 'Not submitting (test-optional)']}
+                               value={data.submittingScores ? 'Submitting scores' : 'Not submitting (test-optional)'}
+                               onChange={(value) => studentSet({submittingScores: value === 'Submitting scores'})}/>
+                </div>
+                {data.submittingScores && (
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16}}>
+                        <Input label="SAT score" type="number" value={data.sat ?? ''}
+                               onChange={(value) => studentSet({sat: value})} placeholder="1450"/>
+                        <Input label="ACT score (optional)" type="number" value={data.act ?? ''}
+                               onChange={(value) => studentSet({act: value})} placeholder="32"/>
+                    </div>
+                )}
                 <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16}}>
-                    <Input label="SAT score" type="number" value={data.sat ?? ''}
-                           onChange={(value) => studentSet({sat: value})} placeholder="1450"/>
-                    <Input label="ACT score (optional)" type="number" value={data.act ?? ''}
-                           onChange={(value) => studentSet({act: value})} placeholder="32"/>
                     <Input label="High School" value={data.highSchool || ''}
                            onChange={(value) => studentSet({highSchool: value})} placeholder="Lincoln High"/>
                     <Input label="Graduation year" type="number" value={data.graduationYear ?? ''}
@@ -200,12 +262,24 @@ export default function OnboardingPage({role}: Props) {
                 <div className="field"><label>Preferred locations</label>
                     <MultiChipSelect options={LOCATIONS} value={data.preferredLocations}
                                      onChange={(value) => studentSet({preferredLocations: value})}/></div>
+                <div className="field"><label>Setting</label>
+                    <MultiChipSelect options={SETTINGS} value={data.settingPreference}
+                                     onChange={(value) => studentSet({settingPreference: value})}/></div>
+                <RangeSlider label="How far from home are you willing to go?" min={0} max={3000} step={50}
+                             value={data.distanceTolerance} onChange={(value) => studentSet({distanceTolerance: value})}
+                             format={(value) => value >= 3000 ? 'Anywhere' : `${value} mi`}/>
                 <div className="field"><label>University size</label>
                     <Segmented options={['Small', 'Medium', 'Large']} value={data.size || ''}
                                onChange={(value) => studentSet({size: value as 'Small' | 'Medium' | 'Large'})}/></div>
                 <DualRangeSlider label="Budget range ($/year)" min={10000} max={80000} step={1000}
                                  value={data.budgetRange} onChange={(value) => studentSet({budgetRange: value})}
                                  format={(value) => `$${(value / 1000).toFixed(0)}k`}/>
+                <div className="field"><label>Will you need financial aid to attend?</label>
+                    <div style={{display: 'flex', alignItems: 'center', gap: 14}}>
+                        <Toggle value={!!data.needsFinancialAid} onChange={(value) => studentSet({needsFinancialAid: value})}/>
+                        <span className="mute text-sm">{data.needsFinancialAid ? 'Yes — prioritize net price & aid' : 'No — cost is not a constraint'}</span>
+                    </div>
+                </div>
                 <div className="field"><label>Desired campus vibe</label>
                     <MultiChipSelect options={[...VIBE_TAGS]} value={data.campusVibes}
                                      onChange={(value) => studentSet({campusVibes: value})}/></div>
@@ -219,6 +293,13 @@ export default function OnboardingPage({role}: Props) {
                 <Textarea label="Career goals" value={data.careerGoal || ''}
                           onChange={(value) => studentSet({careerGoal: value})}
                           placeholder="In a few sentences, what do you want to do with your degree?" rows={3}/>
+                <div className="field"><label>Support you'd like schools to offer (optional)</label>
+                    <MultiChipSelect options={SUPPORT_NEEDS} value={data.supportNeeds}
+                                     onChange={(value) => studentSet({supportNeeds: value})}/></div>
+                <div className="field"><label>How do you want your list balanced?</label>
+                    <Segmented options={['Mostly safety', 'Balanced list', 'Reach-heavy']} value={data.riskTolerance}
+                               onChange={(value) => studentSet({riskTolerance: value as StudentForm['riskTolerance']})}/>
+                </div>
                 <Select label="One thing most important to you" value={data.priority || ''}
                         onChange={(value) => studentSet({priority: value})}
                         options={['Academic rigor', 'Career opportunities', 'Campus community', 'Affordability', 'Location', 'Specific program reputation']}/>
@@ -252,6 +333,11 @@ export default function OnboardingPage({role}: Props) {
                 <RangeSlider label="Average GPA of accepted students" min={2} max={4} step={0.01}
                              value={data.avgGpa ?? 3.6}
                              onChange={(value) => uniSet({avgGpa: value})} format={(value) => value.toFixed(2)}/>
+                <div className="field"><label>Standardized test policy</label>
+                    <Segmented options={['Required', 'Test-optional', 'Test-free']} value={data.testPolicy}
+                               onChange={(value) => uniSet({testPolicy: value as UniForm['testPolicy']})}/>
+                    <span className="mute text-xs" style={{marginTop: 4}}>Policies are changing school-by-school — students weigh this heavily, so keep it current each cycle.</span>
+                </div>
                 <div className="field"><label>Programs offered</label>
                     <MultiChipSelect options={MAJORS} value={data.programs}
                                      onChange={(value) => uniSet({programs: value})}/></div>
@@ -265,6 +351,12 @@ export default function OnboardingPage({role}: Props) {
                 <RangeSlider label="Tuition ($/year)" min={5000} max={80000} step={1000} value={data.tuition ?? 40000}
                              onChange={(value) => uniSet({tuition: value})}
                              format={(value) => `$${(value / 1000).toFixed(0)}k`}/>
+                <RangeSlider label="Average % of financial need met" min={0} max={100} step={5}
+                             value={data.needMetPercent} onChange={(value) => uniSet({needMetPercent: value})}
+                             format={(value) => `${value}%`}/>
+                <RangeSlider label="% of students receiving Pell grants" min={0} max={100} step={5}
+                             value={data.pellPercent} onChange={(value) => uniSet({pellPercent: value})}
+                             format={(value) => `${value}%`}/>
                 <div className="field"><label>Campus vibe tags</label>
                     <MultiChipSelect options={[...VIBE_TAGS]} value={data.campusVibes}
                                      onChange={(value) => uniSet({campusVibes: value})}/></div>
@@ -293,6 +385,18 @@ export default function OnboardingPage({role}: Props) {
                 <div className="field"><label>Activities you value</label>
                     <MultiChipSelect options={ACTIVITIES} value={data.preferredActivities}
                                      onChange={(value) => uniSet({preferredActivities: value})}/></div>
+                <div className="field"><label>Do you track demonstrated interest?</label>
+                    <div style={{display: 'flex', alignItems: 'center', gap: 14}}>
+                        <Toggle value={!!data.tracksDemonstratedInterest} onChange={(value) => uniSet({tracksDemonstratedInterest: value})}/>
+                        <span className="mute text-sm">{data.tracksDemonstratedInterest ? 'Yes — visits & engagement factor in' : "No — it doesn't affect decisions"}</span>
+                    </div>
+                </div>
+                <div className="field"><label>Dedicated first-generation student support?</label>
+                    <div style={{display: 'flex', alignItems: 'center', gap: 14}}>
+                        <Toggle value={!!data.firstGenSupport} onChange={(value) => uniSet({firstGenSupport: value})}/>
+                        <span className="mute text-sm">{data.firstGenSupport ? 'Yes' : 'No'}</span>
+                    </div>
+                </div>
                 <Textarea label="Special programs (optional)" value={data.specialPrograms || ''}
                           onChange={(value) => uniSet({specialPrograms: value})}
                           placeholder="Honors college, BS/MD, signature scholarships, research initiatives..."

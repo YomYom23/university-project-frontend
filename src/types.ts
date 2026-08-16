@@ -1,4 +1,6 @@
 // Shared types
+import type {Dispatch, SetStateAction} from "react";
+
 export type Vibe =
     | 'Research-Focused' | 'Liberal Arts' | 'Sports Culture' | 'City Life'
     | 'Rural Campus' | 'Tech Hub' | 'Creative Arts' | 'Greek Life'
@@ -9,17 +11,16 @@ export type Size = 'Small' | 'Medium' | 'Large';
 export interface User {
     id: string;
     role: 'student' | 'university';
-    isOnboarding: boolean;
     onboardingStep: number;
+    email?: string;
 }
 
 export interface Student {
     id: string;
     firstName: string;
     lastName: string;
-    age: number | string;
+    dateOfBirth: string;
     country: string;
-    email?: string;
     gpa: number;
     sat: number | string;
     act?: number | string;
@@ -82,8 +83,13 @@ export interface NavItem {
 }
 
 export interface AuthContextType {
-    user: User | null;
+    user: Student | University | null;
     isLoading: boolean;
-    setUser: React.Dispatch<React.SetStateAction<User | null>>;
+    // Use the named React types (Dispatch/SetStateAction). Referencing the
+    // `React.*` namespace fails here because verbatimModuleSyntax + react-jsx
+    // means there is no global `React` unless it is explicitly imported.
+    setUser: Dispatch<SetStateAction<Student | University | null>>;
+    // Re-checks /auth/status and refreshes `user`. Call after login/signup so
+    // the context picks up the new session cookie.
     refreshUser: () => Promise<void>;
 }

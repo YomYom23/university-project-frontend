@@ -23,6 +23,14 @@ export const LOCATIONS = [
   'Miami, FL', 'Portland, OR', 'Pittsburgh, PA', 'Ann Arbor, MI',
 ];
 
+export const SETTINGS = ['Urban', 'Suburban', 'Small Town', 'Rural'];
+
+export const SUPPORT_NEEDS = [
+  'First-generation support', 'Disability/accessibility services',
+  'Mental health resources', 'LGBTQ+ resources',
+  'International student services',
+];
+
 export const COUNTRIES = [
   'USA', 'Canada', 'UK', 'Mexico', 'India', 'Germany', 'Japan',
   'Sweden', 'Brazil', 'Other',

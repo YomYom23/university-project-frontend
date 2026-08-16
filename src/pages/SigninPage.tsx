@@ -105,15 +105,16 @@ export default function SigninPage() {
 
             // Pull the freshly-established session into the auth context so
             // ProtectedRoute sees a user instead of bouncing back to /login.
-            await refreshUser();
-            if(user?.isOnboarding){
-                navigate(`/onboarding/${String(user.role).toLowerCase()}`);
-            } else {
 
+            await refreshUser();
+            if(user?.onboardingStep === null){
             // Navigate from the RESPONSE role (not stale state) and normalise
             // casing so it matches the lowercase route paths.
                 const nextRole = String(user?.role ?? '').toLowerCase();
                 navigate(nextRole === 'university' ? '/university/dashboard' : '/student/dashboard');
+
+            } else {
+                navigate(`/onboarding/${String(user?.role).toLowerCase()}`);
             }
         } catch {
             setError('Something went wrong. Please try again.');
