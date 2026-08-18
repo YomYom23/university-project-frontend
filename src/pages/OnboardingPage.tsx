@@ -41,13 +41,33 @@ type UniForm = Partial<University> & {
     firstGenSupport: boolean;
 };
 
-const defaultStudent = (): StudentForm => ({
-    firstName: '', lastName: '', age: '', country: '', email: '',
-    gpa: 3.7, sat: '', highSchool: '', graduationYear: 2026, classRank: '',
-    preferredMajors: [], preferredLocations: [], size: 'Medium', budgetRange: [20000, 50000], campusVibes: [],
-    extracurriculars: [], careerGoal: '', priority: '',
-    gpaScale: 'Unweighted', submittingScores: true, settingPreference: [], distanceTolerance: 500,
-    needsFinancialAid: true, supportNeeds: [], riskTolerance: 'Balanced list',
+const defaultStudent= (): StudentForm => ({
+    firstName: undefined,
+    lastName: undefined,
+    age: undefined,
+    country: undefined,
+    email: undefined,
+    gpa: 3.7,
+    sat: undefined,
+    highSchool: undefined,
+    graduationYear: 2026,
+    classRank: undefined,
+    preferredMajors: undefined,
+    preferredLocations: undefined,
+    size: 'Medium',
+    budgetRange: [20000, 50000],ç
+    campusVibes: undefined,
+    extracurriculars: undefined,
+    careerGoal: undefined,
+    priority: undefined,
+    gpaScale: 'Unweighted',
+    submittingScores: true,
+    settingPreference: undefined,
+    distanceTolerance: 500,
+    needsFinancialAid: true,
+    supportNeeds: undefined,
+    riskTolerance: 'Balanced list',
+});
 });
 const defaultUni = (): UniForm => ({
     name: '', location: '', website: '', founded: '', tagline: '',
@@ -182,7 +202,9 @@ export default function OnboardingPage({role}: Props) {
         }
     };
     const back = async () => {
+        console.log("sending data: ", studentData)
         if(step > 0 ){
+            setStep((currStep: number) => currStep - 1)
             const res = await fetch(`http://localhost:3000/users/`, {
                 method: "PATCH",
                 credentials: 'include',
@@ -190,10 +212,9 @@ export default function OnboardingPage({role}: Props) {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    onboardingStep: step - 1,
+                    userData: studentData,
                 }),
             });
-            setStep((currStep) => currStep - 1)
             if (!res.ok) {
                 throw new Error('Failed to update user step');
             }

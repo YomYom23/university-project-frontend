@@ -28,8 +28,8 @@ export interface Student {
     highSchool?: string;
     graduationYear: number;
     classRank?: string;
-    preferredMajors: string[];
-    preferredLocations: string[];
+    preferredMajors: string[] | undefined;
+    preferredLocations: string[] | undefined;
     size?: Size;
     budgetRange: [number, number];
     campusVibes: string[];
