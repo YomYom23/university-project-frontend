@@ -1,4 +1,4 @@
-import {useState, type ReactNode} from 'react';
+import {useState, type ReactNode, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
 import { useAuth } from "../hooks/useAuth.tsx";
 import {motion, AnimatePresence} from 'framer-motion';
@@ -14,39 +14,15 @@ import {RangeSlider, DualRangeSlider} from '../components/ui/RangeSlider';
 import MultiChipSelect from '../components/ui/MultiChipSelect';
 import StepProgress from '../components/ui/StepProgress';
 import {VIBE_TAGS, MAJORS, ACTIVITIES, LOCATIONS, COUNTRIES, SETTINGS, SUPPORT_NEEDS} from '../data/options';
-import type {Student, University} from '../types';
+import type { StudentForm, UniForm } from '../types';
+import useOnboardingAutoSave from "../hooks/useOnboardingAutoSave.ts";
 
-type StudentForm = Partial<Student> & {
-    preferredMajors: string[]; preferredLocations: string[]; campusVibes: string[];
-    extracurriculars: string[]; budgetRange: [number, number]; gpa: number;
-    // Fields below are informed by the college-fit data taxonomy (A2, A3, B6, B7, B10):
-    // GPA/test values are only comparable with context, so we capture that context
-    // instead of a bare number, and cost/support signals are collected early (cost-first).
-    gpaScale: 'Weighted' | 'Unweighted';
-    submittingScores: boolean;
-    settingPreference: string[];
-    distanceTolerance: number;
-    needsFinancialAid: boolean;
-    supportNeeds: string[];
-    riskTolerance: 'Mostly safety' | 'Balanced list' | 'Reach-heavy';
-};
-type UniForm = Partial<University> & {
-    programs: string[]; campusVibes: string[]; preferredMajors: string[]; preferredActivities: string[];
-    // Fields below reflect the taxonomy's highest-value, most-requested college-side signals
-    // (A3 test policy, B2 need-met %, B5 Pell % as a socioeconomic-diversity proxy, A10 demonstrated interest).
-    testPolicy: 'Required' | 'Test-optional' | 'Test-free';
-    needMetPercent: number;
-    pellPercent: number;
-    tracksDemonstratedInterest: boolean;
-    firstGenSupport: boolean;
-};
 
-const defaultStudent= (): StudentForm => ({
+
+const defaultStudent= (): Partial<StudentForm> => ({
     firstName: undefined,
     lastName: undefined,
-    age: undefined,
     country: undefined,
-    email: undefined,
     gpa: 3.7,
     sat: undefined,
     highSchool: undefined,
@@ -55,7 +31,7 @@ const defaultStudent= (): StudentForm => ({
     preferredMajors: undefined,
     preferredLocations: undefined,
     size: 'Medium',
-    budgetRange: [20000, 50000],ç
+    budgetRange: [20000, 50000],
     campusVibes: undefined,
     extracurriculars: undefined,
     careerGoal: undefined,
@@ -67,7 +43,6 @@ const defaultStudent= (): StudentForm => ({
     needsFinancialAid: true,
     supportNeeds: undefined,
     riskTolerance: 'Balanced list',
-});
 });
 const defaultUni = (): UniForm => ({
     name: '', location: '', website: '', founded: '', tagline: '',
@@ -143,53 +118,45 @@ export default function OnboardingPage({role}: Props) {
     const navigate = useNavigate();
     const steps = isStudent ? STUDENT_STEPS : UNI_STEPS;
     const [step, setStep] = useState(user?.onboardingStep || 0);
-    const [studentData, setStudentData] = useState<StudentForm>(defaultStudent());
-
+    const [studentData, setStudentData] = useState<Partial<StudentForm>>(defaultStudent());
     const [uniData, setUniData] = useState<UniForm>(defaultUni());
+
+    useOnboardingAutoSave(step, studentData, user)
 
     const studentSet = (payload: Partial<StudentForm>) => setStudentData((data) => ({...data, ...payload}));
     const uniSet = (payload: Partial<UniForm>) => setUniData((data) => ({...data, ...payload}));
 
-    const next = async () => {
+    const handleNext = async () => {
 
         if (step === steps.length - 1) {
-            try {
-                if (isStudent) {
-                    const url = "http://localhost:3000/users/"
-                    const response = await fetch(url, {
-                        method: "PATCH",
-                        credentials: "include",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            userData: studentData,
-                            onboardingStep: step + 1,
-                        }),
-                    });
-
-                    if (!response.ok) throw new Error('Failed to register student');
-                    const result = await response.json();
-                    console.log(result);
-
-                    localStorage.setItem('um.student', JSON.stringify(studentData))
-                } else localStorage.setItem('um.university', JSON.stringify(uniData));
-            } catch (e) {
-                console.log("An error has occured: ", e)
-            }
+            // try {
+            //     if (isStudent) {
+            //         const url = "http://localhost:3000/users/"
+            //             const response = await fetch(url, {
+            //                 method: "PATCH",
+            //                 credentials: "include",
+            //                 headers: {
+            //                     "Content-Type": "application/json",
+            //                 },
+            //                 body: JSON.stringify({
+            //                     userData: studentData,
+            //                     onboardingStep: step + 1,
+            //                 }),
+            //             });
+            //
+            //             if (!response.ok) throw new Error('Failed to register student');
+            //         const result = await response.json();
+            //         console.log(result);
+            //
+            //         localStorage.setItem('um.student', JSON.stringify(studentData))
+            //     } else localStorage.setItem('um.university', JSON.stringify(uniData));
+            // } catch (e) {
+            //     console.log("An error has occured: ", e)
+            // }
             navigate(isStudent ? '/student/dashboard' : '/university/dashboard');
         } else {
             try {
-                const res = await fetch(`http://localhost:3000/users/`, {
-                    method: "PATCH",
-                    credentials: 'include',
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        onboardingStep: step + 1,
-                    }),
-                });
+                console.log("cur step: ", step)
                 setStep((currStep) => currStep + 1);
                 if (!res.ok) throw new Error('Failed to update user step');
                 const result = await res.json();
@@ -201,25 +168,27 @@ export default function OnboardingPage({role}: Props) {
             console.log(studentData)
         }
     };
-    const back = async () => {
+    const handleBack = async () => {
         console.log("sending data: ", studentData)
         if(step > 0 ){
             setStep((currStep: number) => currStep - 1)
-            const res = await fetch(`http://localhost:3000/users/`, {
-                method: "PATCH",
-                credentials: 'include',
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    userData: studentData,
-                }),
-            });
-            if (!res.ok) {
-                throw new Error('Failed to update user step');
-            }
-            const result = await res.json();
-            console.log(result);
+            // console.log("cur step: ", step)
+            // const res = await fetch(`http://localhost:3000/users/`, {
+            //     method: "PATCH",
+            //     credentials: 'include',
+            //     headers: {
+            //         "Content-Type": "application/json",
+            //     },
+            //     body: JSON.stringify({
+            //         userData: studentData,
+            //
+            //     }),
+            // });
+            // if (!res.ok) {
+            //     throw new Error('Failed to update user step');
+            // }
+            // const result = await res.json();
+            // console.log(result);
         } else { navigate('/') }
     };
 
@@ -233,8 +202,8 @@ export default function OnboardingPage({role}: Props) {
                            onChange={(value) => studentSet({firstName: value})} placeholder="Aria"/>
                     <Input label="Last name" value={data.lastName || ''}
                            onChange={(value) => studentSet({lastName: value})} placeholder="Patel"/>
-                    <Input label="Date of birth" type="date" value={data.age ?? ''}
-                           onChange={(value) => studentSet({age: value})}/>
+                    <Input label="Date of birth" type="date" value={data.dateOfBirth ?? ''}
+                           onChange={(value) => studentSet({dateOfBirth: value})}/>
                     <Select label="Country" value={data.country || ''}
                             onChange={(value) => studentSet({country: value})} options={[...COUNTRIES]}/>
                 </div>
@@ -458,10 +427,10 @@ export default function OnboardingPage({role}: Props) {
                         {isStudent ? renderStudent() : renderUni()}
                     </AnimatePresence>
                     <div style={{display: 'flex', justifyContent: 'space-between', marginTop: 32, gap: 12}}>
-                        <Button variant="ghost" onClick={back} icon={<ChevronLeft size={16}/>}>
+                        <Button variant="ghost" onClick={handleBack} icon={<ChevronLeft size={16}/>}>
                             {step === 0 ? 'Cancel' : 'Back'}
                         </Button>
-                        <Button onClick={next} iconRight={step === steps.length - 1 ? <ArrowRight size={16}/> :
+                        <Button onClick={handleNext} iconRight={step === steps.length - 1 ? <ArrowRight size={16}/> :
                             <ChevronRight size={16}/>}>
                             {step === steps.length - 1 ? 'Complete profile' : `Continue (${step + 1}/${steps.length})`}
                         </Button>

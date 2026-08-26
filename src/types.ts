@@ -1,5 +1,5 @@
 // Shared types
-import type {Dispatch, SetStateAction} from "react";
+import type {Dispatch, ReactNode, SetStateAction} from "react";
 
 export type Vibe =
     | 'Research-Focused' | 'Liberal Arts' | 'Sports Culture' | 'City Life'
@@ -28,8 +28,8 @@ export interface Student {
     highSchool?: string;
     graduationYear: number;
     classRank?: string;
-    preferredMajors: string[] | undefined;
-    preferredLocations: string[] | undefined;
+    preferredMajors: string[];
+    preferredLocations: string[];
     size?: Size;
     budgetRange: [number, number];
     campusVibes: string[];
@@ -82,8 +82,34 @@ export interface NavItem {
     badge?: number | null;
 }
 
+export type StudentForm = Partial<Student> & {
+    preferredMajors: string[]; preferredLocations: string[]; campusVibes: string[];
+    extracurriculars: string[]; budgetRange: [number, number]; gpa: number;
+    // Fields below are informed by the college-fit data taxonomy (A2, A3, B6, B7, B10):
+    // GPA/test values are only comparable with context, so we capture that context
+    // instead of a bare number, and cost/support signals are collected early (cost-first).
+    gpaScale: 'Weighted' | 'Unweighted';
+    submittingScores: boolean;
+    settingPreference: string[];
+    distanceTolerance: number;
+    needsFinancialAid: boolean;
+    supportNeeds: string[];
+    riskTolerance: 'Mostly safety' | 'Balanced list' | 'Reach-heavy';
+};
+
+export type UniForm = Partial<University> & {
+    programs: string[]; campusVibes: string[]; preferredMajors: string[]; preferredActivities: string[];
+    // Fields below reflect the taxonomy's highest-value, most-requested college-side signals
+    // (A3 test policy, B2 need-met %, B5 Pell % as a socioeconomic-diversity proxy, A10 demonstrated interest).
+    testPolicy: 'Required' | 'Test-optional' | 'Test-free';
+    needMetPercent: number;
+    pellPercent: number;
+    tracksDemonstratedInterest: boolean;
+    firstGenSupport: boolean;
+};
+
 export interface AuthContextType {
-    user: Student | University | null;
+    user: User;
     isLoading: boolean;
     // Use the named React types (Dispatch/SetStateAction). Referencing the
     // `React.*` namespace fails here because verbatimModuleSyntax + react-jsx
