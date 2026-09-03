@@ -22,7 +22,7 @@ export interface Student {
     dateOfBirth: string;
     country: string;
     gpa: number;
-    sat: number | string;
+    satScore: number | string;
     act?: number | string;
     major: string;
     highSchool?: string;
@@ -88,7 +88,7 @@ export type StudentForm = Partial<Student> & {
     // Fields below are informed by the college-fit data taxonomy (A2, A3, B6, B7, B10):
     // GPA/test values are only comparable with context, so we capture that context
     // instead of a bare number, and cost/support signals are collected early (cost-first).
-    gpaScale: 'Weighted' | 'Unweighted';
+    // gpaScale: 'Weighted' | 'Unweighted';
     submittingScores: boolean;
     settingPreference: string[];
     distanceTolerance: number;

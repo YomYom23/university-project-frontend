@@ -321,13 +321,13 @@ function MyProfileTab({ student, setStudent }: { student: Student; setStudent: (
               <Input label="High school" value={student.highSchool || ''} onChange={(v) => set({ highSchool: v })} />
               <RangeSlider label="GPA" min={0} max={4} step={0.01} value={Number(student.gpa) || 0}
                 onChange={(v) => set({ gpa: v })} format={(v) => v.toFixed(2)} />
-              <Input label="SAT score" type="number" value={student.sat ?? ''} onChange={(v) => set({ sat: v })} />
+              <Input label="SAT score" type="number" value={student.satScore ?? ''} onChange={(v) => set({ satScore: v })} />
             </>
           ) : (
             <>
               <Stat label="High school" value={student.highSchool || '—'} />
               <Stat label="GPA" value={Number(student.gpa).toFixed(2)} />
-              <Stat label="SAT" value={String(student.sat) || '—'} />
+              <Stat label="SAT" value={String(student.satScore) || '—'} />
               <Stat label="Class rank" value={student.classRank || '—'} />
               <Stat label="Intended major" value={student.major || student.preferredMajors?.[0] || '—'} />
               <Stat label="Budget" value={`$${(student.budgetRange[0] / 1000).toFixed(0)}k – $${(student.budgetRange[1] / 1000).toFixed(0)}k`} />

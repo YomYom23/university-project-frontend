@@ -24,25 +24,25 @@ const defaultStudent= (): Partial<StudentForm> => ({
     lastName: undefined,
     country: undefined,
     gpa: 3.7,
-    sat: undefined,
+    satScore: undefined,
     highSchool: undefined,
     graduationYear: 2026,
     classRank: undefined,
     preferredMajors: undefined,
     preferredLocations: undefined,
-    size: 'Medium',
+    size: 'MEDIUM',
     budgetRange: [20000, 50000],
     campusVibes: undefined,
     extracurriculars: undefined,
     careerGoal: undefined,
     priority: undefined,
-    gpaScale: 'Unweighted',
-    submittingScores: true,
-    settingPreference: undefined,
-    distanceTolerance: 500,
-    needsFinancialAid: true,
-    supportNeeds: undefined,
-    riskTolerance: 'Balanced list',
+    // gpaScale: 'Unweighted',
+    // submittingScores: true,
+    // settingPreference: undefined,
+    // distanceTolerance: 500,
+    // needsFinancialAid: true,
+    // supportNeeds: undefined,
+    // riskTolerance: 'Balanced list',
 });
 const defaultUni = (): UniForm => ({
     name: '', location: '', website: '', founded: '', tagline: '',
@@ -129,38 +129,11 @@ export default function OnboardingPage({role}: Props) {
     const handleNext = async () => {
 
         if (step === steps.length - 1) {
-            // try {
-            //     if (isStudent) {
-            //         const url = "http://localhost:3000/users/"
-            //             const response = await fetch(url, {
-            //                 method: "PATCH",
-            //                 credentials: "include",
-            //                 headers: {
-            //                     "Content-Type": "application/json",
-            //                 },
-            //                 body: JSON.stringify({
-            //                     userData: studentData,
-            //                     onboardingStep: step + 1,
-            //                 }),
-            //             });
-            //
-            //             if (!response.ok) throw new Error('Failed to register student');
-            //         const result = await response.json();
-            //         console.log(result);
-            //
-            //         localStorage.setItem('um.student', JSON.stringify(studentData))
-            //     } else localStorage.setItem('um.university', JSON.stringify(uniData));
-            // } catch (e) {
-            //     console.log("An error has occured: ", e)
-            // }
             navigate(isStudent ? '/student/dashboard' : '/university/dashboard');
         } else {
             try {
                 console.log("cur step: ", step)
                 setStep((currStep) => currStep + 1);
-                if (!res.ok) throw new Error('Failed to update user step');
-                const result = await res.json();
-                console.log(result);
             } catch (e) {
                 console.log("Error: ", e)
             }
@@ -172,23 +145,6 @@ export default function OnboardingPage({role}: Props) {
         console.log("sending data: ", studentData)
         if(step > 0 ){
             setStep((currStep: number) => currStep - 1)
-            // console.log("cur step: ", step)
-            // const res = await fetch(`http://localhost:3000/users/`, {
-            //     method: "PATCH",
-            //     credentials: 'include',
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //     },
-            //     body: JSON.stringify({
-            //         userData: studentData,
-            //
-            //     }),
-            // });
-            // if (!res.ok) {
-            //     throw new Error('Failed to update user step');
-            // }
-            // const result = await res.json();
-            // console.log(result);
         } else { navigate('/') }
     };
 
@@ -227,8 +183,8 @@ export default function OnboardingPage({role}: Props) {
                 </div>
                 {data.submittingScores && (
                     <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16}}>
-                        <Input label="SAT score" type="number" value={data.sat ?? ''}
-                               onChange={(value) => studentSet({sat: value})} placeholder="1450"/>
+                        <Input label="SAT score" type="number" value={data.satScore ?? ''}
+                               onChange={(value) => studentSet({satScore: value})} placeholder="1450"/>
                         <Input label="ACT score (optional)" type="number" value={data.act ?? ''}
                                onChange={(value) => studentSet({act: value})} placeholder="32"/>
                     </div>

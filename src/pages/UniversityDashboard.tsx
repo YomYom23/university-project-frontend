@@ -71,7 +71,7 @@ function StudentCard({ student, uni, shortlisted, onStar, onView, index }: {
           </div>
           <div className="match-card-stat">
             <div className="match-card-stat-label">SAT</div>
-            <div className="match-card-stat-val">{student.sat}</div>
+            <div className="match-card-stat-val">{student.satScore}</div>
           </div>
           <div className="match-card-stat">
             <div className="match-card-stat-label">Major</div>
@@ -121,7 +121,7 @@ function StudentProfilePanel({ student, uni, open, onClose }: {
       <div className="panel-body">
         <div className="stats-row">
           <Card className="stat-card"><div className="stat-val">{Number(student.gpa).toFixed(2)}</div><div className="stat-label">GPA</div></Card>
-          <Card className="stat-card"><div className="stat-val">{student.sat}</div><div className="stat-label">SAT</div></Card>
+          <Card className="stat-card"><div className="stat-val">{student.satScore}</div><div className="stat-label">SAT</div></Card>
           <Card className="stat-card"><div className="stat-val">{student.graduationYear}</div><div className="stat-label">Grad year</div></Card>
           <Card className="stat-card"><div className="stat-val">${(student.budgetRange[1] / 1000).toFixed(0)}k</div><div className="stat-label">Budget ceiling</div></Card>
         </div>

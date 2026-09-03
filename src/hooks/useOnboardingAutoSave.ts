@@ -12,7 +12,7 @@ export default function useOnboardingAutoSave(step: number, studentData: Partial
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        userData: user.onboardingStep,
+                        userData: {onboardingStep: user.onboardingStep},
                         studentData: studentData,
                     }),
                 });
