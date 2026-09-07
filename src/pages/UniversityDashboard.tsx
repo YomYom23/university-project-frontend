@@ -23,6 +23,7 @@ import { mockStudents } from '../data/mockStudents';
 import { MAJORS, LOCATIONS, VIBE_TAGS, ACTIVITIES } from '../data/options';
 import { computeMatch, topMatchReasonsForStudent } from '../hooks/useMatchScore';
 import type { Student, University } from '../types';
+import { ageOf, fullName } from '../lib/student';
 
 const iconMap: Record<string, LucideIcon> = {
   bar: BarChart3, user: User, star: Star, building: Building2, settings: Settings,
@@ -49,9 +50,9 @@ function StudentCard({ student, uni, shortlisted, onStar, onView, index }: {
     >
       <Card className="match-card">
         <div className="match-card-head">
-          <Avatar name={student.name} size={52} gradient={avatarGradients[index % avatarGradients.length]} />
+          <Avatar name={fullName(student)} size={52} gradient={avatarGradients[index % avatarGradients.length]} />
           <div className="match-card-title">
-            <div className="match-card-name">{student.name}</div>
+            <div className="match-card-name">{fullName(student)}</div>
             <div className="match-card-meta">
               <MapPin size={11} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 4 }} />
               {student.country} · Class of {student.graduationYear}
@@ -103,11 +104,11 @@ function StudentProfilePanel({ student, uni, open, onClose }: {
   return (
     <Panel open={open} onClose={onClose}>
       <div className="panel-hero">
-        <Avatar name={student.name} size={78} gradient="linear-gradient(135deg,#2563eb,#06b6d4)" />
+        <Avatar name={fullName(student)} size={78} gradient="linear-gradient(135deg,#2563eb,#06b6d4)" />
         <div style={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
-          <div className="h3" style={{ fontSize: 22 }}>{student.name}</div>
+          <div className="h3" style={{ fontSize: 22 }}>{fullName(student)}</div>
           <div className="mute" style={{ marginTop: 4 }}>
-            Age {student.age} · {student.country} · Class of {student.graduationYear}
+            Age {ageOf(student) ?? '—'} · {student.country} · Class of {student.graduationYear}
           </div>
           <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             <Badge tone="blue">{student.major}</Badge>
@@ -196,7 +197,7 @@ function CandidatePoolTab({ uni, shortlist, setShortlist, openStudent }: {
   );
 
   const filtered = scored.filter(({ s }) =>
-    (!q || s.name.toLowerCase().includes(q.toLowerCase()) || s.major.toLowerCase().includes(q.toLowerCase())) &&
+    (!q || fullName(s).toLowerCase().includes(q.toLowerCase()) || s.major.toLowerCase().includes(q.toLowerCase())) &&
     (!maj || s.major === maj) &&
     (!loc || s.preferredLocations.includes(loc)) &&
     s.gpa >= gpaMin &&

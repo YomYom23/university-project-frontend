@@ -17,6 +17,7 @@ import MultiChipSelect from '../components/ui/MultiChipSelect';
 import Panel from '../components/ui/Panel';
 import Toggle from '../components/ui/Toggle';
 import TopNav from '../components/layout/TopNav';
+import { ageOf, fullName } from '../lib/student';
 import { mockUniversities } from '../data/mockUniversities';
 import { mockStudents } from '../data/mockStudents';
 import { MAJORS, LOCATIONS, VIBE_TAGS, ACTIVITIES } from '../data/options';
@@ -28,7 +29,12 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 function profileCompleteness(s: Student) {
-  const fields = ['name', 'age', 'country', 'gpa', 'sat', 'highSchool', 'graduationYear', 'careerGoal'] as const;
+  // These are the real Student keys — the list previously named 'name', 'age',
+  // and 'sat', none of which exist, so those three always counted as missing.
+  const fields = [
+    'firstName', 'lastName', 'dateOfBirth', 'country', 'gpa', 'satScore', 'highSchool',
+    'graduationYear', 'careerGoal',
+  ] as const;
   const arrays = ['preferredMajors', 'preferredLocations', 'campusVibes', 'extracurriculars'] as const;
   const total = fields.length + arrays.length;
   let done = 0;
@@ -304,13 +310,18 @@ function MyProfileTab({ student, setStudent }: { student: Student; setStudent: (
 
       <Card style={{ padding: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-          <Avatar name={student.name || 'Student'} size={68} />
+          <Avatar name={fullName(student) || 'Student'} size={68} />
           <div>
             {edit
-              ? <Input value={student.name} onChange={(v) => set({ name: v })} placeholder="Your name" />
-              : <div className="h2">{student.name || 'Add your name'}</div>}
+              ? (
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <Input value={student.firstName || ''} onChange={(v) => set({ firstName: v })} placeholder="First name" />
+                  <Input value={student.lastName || ''} onChange={(v) => set({ lastName: v })} placeholder="Last name" />
+                </div>
+              )
+              : <div className="h2">{fullName(student) || 'Add your name'}</div>}
             <div className="mute" style={{ marginTop: 4 }}>
-              Age {student.age || '—'} · {student.country || '—'} · Graduating {student.graduationYear || '—'}
+              Age {ageOf(student) ?? '—'} · {student.country || '—'} · Graduating {student.graduationYear || '—'}
             </div>
           </div>
         </div>
@@ -495,7 +506,7 @@ export default function StudentDashboard() {
       transition={{ duration: 0.5 }}
     >
       <TopNav
-        name={student.name || 'Student'}
+        name={fullName(student) || 'Student'}
         subtitle={student.major || student.preferredMajors?.[0] || 'Applicant'}
         iconMap={iconMap} nav={nav} current={tab} onNav={setTab}
         onBack={() => navigate('/')}
