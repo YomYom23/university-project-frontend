@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Single lockfile: this project installs with bun (see bun.lock)
+package-lock.json
