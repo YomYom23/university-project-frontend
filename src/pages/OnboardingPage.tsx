@@ -1,6 +1,5 @@
-import {useState, type ReactNode, useEffect} from 'react';
+import {useState, type ReactNode, useCallback} from 'react';
 import {useNavigate} from 'react-router-dom';
-import { useAuth } from "../hooks/useAuth.tsx";
 import {motion, AnimatePresence} from 'framer-motion';
 import {ChevronLeft, ChevronRight, ArrowRight, Upload} from 'lucide-react';
 import Button from '../components/ui/Button';
@@ -15,7 +14,8 @@ import MultiChipSelect from '../components/ui/MultiChipSelect';
 import StepProgress from '../components/ui/StepProgress';
 import {VIBE_TAGS, MAJORS, ACTIVITIES, LOCATIONS, COUNTRIES, SETTINGS, SUPPORT_NEEDS} from '../data/options';
 import type { StudentForm, UniForm } from '../types';
-import useOnboardingAutoSave from "../hooks/useOnboardingAutoSave.ts";
+import LoadingScreen from '../components/ui/LoadingScreen';
+import useOnboardingSync, { type RestoredOnboarding } from '../hooks/useOnboardingSync.ts';
 
 
 
@@ -30,7 +30,9 @@ const defaultStudent= (): Partial<StudentForm> => ({
     classRank: undefined,
     preferredMajors: undefined,
     preferredLocations: undefined,
-    size: 'MEDIUM',
+    // Title case to match the Segmented options below; the API maps this onto
+    // the upper-case CampusSize enum.
+    size: 'Medium',
     budgetRange: [20000, 50000],
     campusVibes: undefined,
     extracurriculars: undefined,
@@ -113,40 +115,65 @@ interface Props {
 }
 
 export default function OnboardingPage({role}: Props) {
-    const { user } = useAuth();
     const isStudent = role === 'student';
     const navigate = useNavigate();
     const steps = isStudent ? STUDENT_STEPS : UNI_STEPS;
-    const [step, setStep] = useState(user?.onboardingStep || 0);
+    const [step, setStep] = useState(0);
     const [studentData, setStudentData] = useState<Partial<StudentForm>>(defaultStudent());
     const [uniData, setUniData] = useState<UniForm>(defaultUni());
 
-    useOnboardingAutoSave(step, studentData, user)
+    const handleRestore = useCallback(({step: savedStep, form}: RestoredOnboarding) => {
+        // A finished profile reports a step past the last one, so clamp rather
+        // than landing on a step index that doesn't render.
+        setStep(Math.min(Math.max(savedStep, 0), STUDENT_STEPS.length - 1));
+        setStudentData((data) => ({...data, ...form}));
+    }, []);
+
+    const {loading, saving, error, save, dismissError} = useOnboardingSync(isStudent, handleRestore);
 
     const studentSet = (payload: Partial<StudentForm>) => setStudentData((data) => ({...data, ...payload}));
     const uniSet = (payload: Partial<UniForm>) => setUniData((data) => ({...data, ...payload}));
 
-    const handleNext = async () => {
+    // StudentProfile.firstName / lastName / dateOfBirth are NOT NULL, so the
+    // API can't create the row until step 0 is filled in. Block the step here
+    // rather than letting every later save fail.
+    const step0Complete = Boolean(
+        studentData.firstName?.trim() && studentData.lastName?.trim() && studentData.dateOfBirth,
+    );
+    const blockedOnStep0 = isStudent && step === 0 && !step0Complete;
 
-        if (step === steps.length - 1) {
+    const handleNext = async () => {
+        if (blockedOnStep0 || saving) return;
+
+        const isLastStep = step === steps.length - 1;
+        // Past the last step means "onboarding finished", which is what the
+        // API stores so a return visit resumes at the end rather than midway.
+        const nextStep = isLastStep ? steps.length : step + 1;
+
+        if (!await save(nextStep, studentData)) return;
+
+        if (isLastStep) {
             navigate(isStudent ? '/student/dashboard' : '/university/dashboard');
         } else {
-            try {
-                console.log("cur step: ", step)
-                setStep((currStep) => currStep + 1);
-            } catch (e) {
-                console.log("Error: ", e)
-            }
-
-            console.log(studentData)
+            setStep(nextStep);
         }
     };
+
     const handleBack = async () => {
-        console.log("sending data: ", studentData)
-        if(step > 0 ){
-            setStep((currStep: number) => currStep - 1)
-        } else { navigate('/') }
+        if (saving) return;
+
+        if (step === 0) {
+            navigate('/');
+            return;
+        }
+
+        const previousStep = step - 1;
+        // Save on the way back too, so edits made before hitting Back survive.
+        await save(previousStep, studentData);
+        setStep(previousStep);
     };
+
+    if (loading) return <LoadingScreen/>;
 
     const renderStudent = () => {
         const data = studentData;
@@ -382,13 +409,34 @@ export default function OnboardingPage({role}: Props) {
                     <AnimatePresence mode="wait">
                         {isStudent ? renderStudent() : renderUni()}
                     </AnimatePresence>
+
+                    {error && (
+                        <div role="alert" onClick={dismissError}
+                             style={{
+                                 marginTop: 24, padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
+                                 border: '1px solid var(--danger)', color: 'var(--danger)', fontSize: 13,
+                             }}>
+                            {error} <span className="mute text-xs">(click to dismiss)</span>
+                        </div>
+                    )}
+
+                    {blockedOnStep0 && (
+                        <p className="mute text-xs" style={{marginTop: 24}}>
+                            Add your first name, last name, and date of birth to continue.
+                        </p>
+                    )}
+
                     <div style={{display: 'flex', justifyContent: 'space-between', marginTop: 32, gap: 12}}>
-                        <Button variant="ghost" onClick={handleBack} icon={<ChevronLeft size={16}/>}>
+                        <Button variant="ghost" onClick={handleBack} disabled={saving}
+                                icon={<ChevronLeft size={16}/>}>
                             {step === 0 ? 'Cancel' : 'Back'}
                         </Button>
-                        <Button onClick={handleNext} iconRight={step === steps.length - 1 ? <ArrowRight size={16}/> :
-                            <ChevronRight size={16}/>}>
-                            {step === steps.length - 1 ? 'Complete profile' : `Continue (${step + 1}/${steps.length})`}
+                        <Button onClick={handleNext} disabled={saving || blockedOnStep0}
+                                iconRight={step === steps.length - 1 ? <ArrowRight size={16}/> :
+                                    <ChevronRight size={16}/>}>
+                            {saving ? 'Saving…'
+                                : step === steps.length - 1 ? 'Complete profile'
+                                    : `Continue (${step + 1}/${steps.length})`}
                         </Button>
                     </div>
                 </Card>
