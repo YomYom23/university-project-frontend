@@ -2,7 +2,8 @@ import { Check } from 'lucide-react';
 
 interface Props {
   options: string[];
-  value: string[];
+  // Optional: an in-progress form legitimately has nothing selected yet.
+  value?: string[];
   onChange: (v: string[]) => void;
   single?: boolean;
 }

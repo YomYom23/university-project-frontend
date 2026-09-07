@@ -1,5 +1,5 @@
 // Shared types
-import type {Dispatch, ReactNode, SetStateAction} from "react";
+import type {Dispatch, SetStateAction} from "react";
 
 export type Vibe =
     | 'Research-Focused' | 'Liberal Arts' | 'Sports Culture' | 'City Life'
@@ -88,7 +88,10 @@ export type StudentForm = Partial<Student> & {
     // Fields below are informed by the college-fit data taxonomy (A2, A3, B6, B7, B10):
     // GPA/test values are only comparable with context, so we capture that context
     // instead of a bare number, and cost/support signals are collected early (cost-first).
-    // gpaScale: 'Weighted' | 'Unweighted';
+    //
+    // None of these have a StudentProfile column, so they stay client-side —
+    // src/api/onboarding.ts does not send them.
+    gpaScale: 'Weighted' | 'Unweighted';
     submittingScores: boolean;
     settingPreference: string[];
     distanceTolerance: number;
@@ -109,12 +112,14 @@ export type UniForm = Partial<University> & {
 };
 
 export interface AuthContextType {
-    user: User;
+    // Null while signed out, and before the first /auth/status call resolves.
+    // Guard on `isLoading` first, as ProtectedRoute does.
+    user: User | null;
     isLoading: boolean;
     // Use the named React types (Dispatch/SetStateAction). Referencing the
     // `React.*` namespace fails here because verbatimModuleSyntax + react-jsx
     // means there is no global `React` unless it is explicitly imported.
-    setUser: Dispatch<SetStateAction<Student | University | null>>;
+    setUser: Dispatch<SetStateAction<User | null>>;
     // Re-checks /auth/status and refreshes `user`. Call after login/signup so
     // the context picks up the new session cookie.
     refreshUser: () => Promise<void>;

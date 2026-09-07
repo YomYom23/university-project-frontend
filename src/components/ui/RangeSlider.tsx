@@ -3,12 +3,13 @@ import { useCallback, useEffect, useRef } from 'react';
 interface SingleProps {
   label?: string;
   min: number; max: number; step?: number;
-  value: number;
+  // Optional: an in-progress form legitimately has no value yet.
+  value?: number;
   onChange: (v: number) => void;
   format?: (v: number) => string;
 }
 
-export function RangeSlider({ label, min, max, step = 1, value, onChange, format }: SingleProps) {
+export function RangeSlider({ label, min, max, step = 1, value = min, onChange, format }: SingleProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const pct = ((value - min) / (max - min)) * 100;
@@ -57,7 +58,7 @@ export function RangeSlider({ label, min, max, step = 1, value, onChange, format
 interface DualProps {
   label?: string;
   min: number; max: number; step?: number;
-  value: [number, number];
+  value?: [number, number];
   onChange: (v: [number, number]) => void;
   format?: (v: number) => string;
 }
@@ -65,7 +66,7 @@ interface DualProps {
 export function DualRangeSlider({ label, min, max, step = 1, value, onChange, format }: DualProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragHandle = useRef<'lo' | 'hi' | null>(null);
-  const [lo, hi] = value;
+  const [lo, hi] = value ?? [min, max];
   const loPct = ((lo - min) / (max - min)) * 100;
   const hiPct = ((hi - min) / (max - min)) * 100;
 
