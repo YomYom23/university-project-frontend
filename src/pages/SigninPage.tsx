@@ -40,7 +40,7 @@ function BrandPanel() {
                     width: 24, height: 24, borderRadius: 7, background: 'var(--bg)', color: 'var(--text)',
                     display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 700, letterSpacing: '-0.02em',
                 }}>U</div>
-                <div style={{ fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em' }}>UniMatch</div>
+                <div style={{ fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em' }}>Versiti</div>
             </div>
 
             <div style={{ position: 'relative', marginTop: 'auto', paddingTop: 56 }}>
@@ -132,7 +132,7 @@ export default function SigninPage() {
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 32px' }}>
           <span className="mute text-sm">
-            New to UniMatch?{' '}
+            New to Versiti?{' '}
               <a onClick={() => navigate('/signup')} style={{ color: 'var(--text)', fontWeight: 500, cursor: 'pointer' }}>Create an account</a>
           </span>
                 </div>

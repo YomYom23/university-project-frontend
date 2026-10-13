@@ -35,7 +35,7 @@ export default function TopNav({
               display: 'grid', placeItems: 'center',
               fontWeight: 700, fontSize: 12, letterSpacing: '-0.02em',
             }}>U</div>
-            <div style={{ fontWeight: 500, fontSize: 14, letterSpacing: '-0.01em' }}>UniMatch</div>
+            <div style={{ fontWeight: 500, fontSize: 14, letterSpacing: '-0.01em' }}>Versiti</div>
           </button>
 
           <Button onClick={onboarding}>

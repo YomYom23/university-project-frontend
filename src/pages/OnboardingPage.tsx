@@ -396,7 +396,7 @@ export default function OnboardingPage({role}: Props) {
                         fontWeight: 700, fontSize: 12, letterSpacing: '-0.02em',
                     }}>U
                     </div>
-                    <div style={{fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em'}}>UniMatch</div>
+                    <div style={{fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em'}}>Versiti</div>
                 </button>
                 <Badge>{isStudent ? 'Student onboarding' : 'University onboarding'}</Badge>
             </nav>

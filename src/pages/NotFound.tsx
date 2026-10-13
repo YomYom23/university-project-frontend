@@ -16,7 +16,7 @@ export default function NotFound() {
           letterSpacing: '-0.03em', color: 'var(--text-3)',
         }}>404</div>
         <h2 className="h2" style={{ marginTop: 20 }}>Page not found</h2>
-        <p className="mute" style={{ marginTop: 10 }}>That route doesn't exist in UniMatch.</p>
+        <p className="mute" style={{ marginTop: 10 }}>That route doesn't exist in Versiti.</p>
         <div style={{ marginTop: 24 }}>
           <Button onClick={() => navigate('/')} icon={<Home size={16} />}>Back to landing</Button>
         </div>

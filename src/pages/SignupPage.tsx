@@ -75,7 +75,7 @@ function BrandPanel() {
                     width: 24, height: 24, borderRadius: 7, background: 'var(--bg)', color: 'var(--text)',
                     display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 700, letterSpacing: '-0.02em',
                 }}>U</div>
-                <div style={{ fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em' }}>UniMatch</div>
+                <div style={{ fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em' }}>Versiti</div>
             </div>
 
             <div style={{ position: 'relative', marginTop: 'auto', paddingTop: 56 }}>
@@ -235,7 +235,7 @@ export default function SignupPage() {
                 {agree && <Check size={12} />}
               </span>
                             <span className="text-sm" style={{ color: 'var(--text-2)', lineHeight: 1.5 }}>
-                I agree to UniMatch's <a style={{ color: 'var(--text)', textDecoration: 'underline' }}>Terms</a> and <a style={{ color: 'var(--text)', textDecoration: 'underline' }}>Privacy Policy</a>.
+                I agree to Versiti's <a style={{ color: 'var(--text)', textDecoration: 'underline' }}>Terms</a> and <a style={{ color: 'var(--text)', textDecoration: 'underline' }}>Privacy Policy</a>.
               </span>
                         </button>
                         {touched && !agree && <span style={{ fontSize: 11, color: 'var(--danger)', marginTop: -12 }}>Please accept the terms to continue</span>}

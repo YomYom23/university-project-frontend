@@ -127,7 +127,7 @@ export default function LandingPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
           <Logo size={22} />
-          <div style={{ fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em' }}>UniMatch</div>
+          <div style={{ fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em' }}>Versiti</div>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <a href="#features" className="mute text-sm" style={{ marginRight: 8 }}>Features</a>
@@ -209,7 +209,7 @@ export default function LandingPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
             <Logo size={18} />
-            <div style={{ fontWeight: 500, fontSize: 14 }}>UniMatch</div>
+            <div style={{ fontWeight: 500, fontSize: 14 }}>Versiti</div>
             <span className="mute text-xs" style={{ marginLeft: 10 }}>© 2026</span>
           </div>
           <div style={{ display: 'flex', gap: 22 }} className="mute text-xs">

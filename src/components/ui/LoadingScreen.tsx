@@ -71,7 +71,7 @@ export default function LoadingScreen({ onDone, duration = 2200 }: LoadingScreen
 
                 {/* Wordmark */}
                 <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontWeight: 500, fontSize: 22, letterSpacing: '-0.02em' }}>UniMatch</div>
+                    <div style={{ fontWeight: 500, fontSize: 22, letterSpacing: '-0.02em' }}>Versiti</div>
                     <div style={{ fontSize: 13, color: 'rgba(246,244,238,0.6)', marginTop: 6, minHeight: 18, transition: 'opacity 0.3s ease' }}>
                         {MESSAGES[msgIndex]}
                         <span style={{ display: 'inline-flex', gap: 3, marginLeft: 6, verticalAlign: 'middle' }}>
