@@ -66,7 +66,7 @@ export default function LoadingScreen({ onDone, duration = 2200 }: LoadingScreen
                         width: 60, height: 60, borderRadius: 18, background: 'var(--bg)', color: 'var(--text)',
                         display: 'grid', placeItems: 'center', fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em',
                         animation: 'umLogoPulse 1.8s ease-in-out infinite',
-                    }}>U</div>
+                    }}>V</div>
                 </div>
 
                 {/* Wordmark */}

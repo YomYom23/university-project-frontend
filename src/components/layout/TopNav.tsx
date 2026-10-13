@@ -34,7 +34,7 @@ export default function TopNav({
               background: 'var(--text)', color: 'var(--bg)',
               display: 'grid', placeItems: 'center',
               fontWeight: 700, fontSize: 12, letterSpacing: '-0.02em',
-            }}>U</div>
+            }}>V</div>
             <div style={{ fontWeight: 500, fontSize: 14, letterSpacing: '-0.01em' }}>Versiti</div>
           </button>
 

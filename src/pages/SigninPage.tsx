@@ -39,7 +39,7 @@ function BrandPanel() {
                 <div style={{
                     width: 24, height: 24, borderRadius: 7, background: 'var(--bg)', color: 'var(--text)',
                     display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 700, letterSpacing: '-0.02em',
-                }}>U</div>
+                }}>V</div>
                 <div style={{ fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em' }}>Versiti</div>
             </div>
 

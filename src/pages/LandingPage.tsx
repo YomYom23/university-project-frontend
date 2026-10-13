@@ -13,7 +13,7 @@ function Logo({ size = 22 }: { size?: number }) {
       background: 'var(--text)', color: 'var(--bg)',
       display: 'grid', placeItems: 'center',
       fontSize: Math.round(size * 0.5), fontWeight: 700, letterSpacing: '-0.02em',
-    }}>U</div>
+    }}>V</div>
   );
 }
 
@@ -182,7 +182,7 @@ export default function LandingPage() {
         </div>
         <div className="stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
           <FeatureCard Icon={Target} title="Smart matching"
-            body="A multi-signal model weighs academics, budget, vibe, location, and goals — not just rankings." />
+            body="A multi-signal model weighs academics, budget, vibe, location, and goals, not just rankings." />
           <FeatureCard Icon={User} title="Real profiles"
             body="Students share more than test scores. Universities share more than brochure copy. Real signal, both sides." />
           <FeatureCard Icon={Zap} title="Instant results"
